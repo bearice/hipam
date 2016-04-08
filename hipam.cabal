@@ -65,7 +65,6 @@ executable hipam
                   , persistent
                   , persistent-template
                   , persistent-sqlite
-                  , persistent-postgresql
                   , monad-logger
                   , heroku
                   , transformers
