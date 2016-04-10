@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-
+{-# LANGUAGE PatternGuards #-}
 module Main where
 import System.Directory (removeFile)
 import System.Environment
@@ -9,44 +9,52 @@ import Network.Wai.Middleware.RequestLogger
 import Network.Socket
 import Data.Maybe
 import Data.List
+import Data.IP (toHostAddress)
 import Data.Default.Class (def)
 import Control.Exception (bracket)
-
-data ServerSocketAddress = UnixSocket String | TCPSocket Int
+import Control.Monad
 
 main :: IO()
 main = bracket createSocket destroySocket $ \(_,socket) -> do
     listen socket 10
     scottySocket def socket routing
   where
-    listenOn = do
-      env <- getEnvironment
-      let val = fromMaybe "./ipam.sock" $ lookup "LISTEN" env
-      return $ if "unix://" `isPrefixOf` val
-        then
-          addrInfo AF_UNIX $ SockAddrUnix $ drop 7 val
-        else
-          addrInfo AF_INET $ SockAddrInet (fromInteger $ read val) 0
+    parseInetAddr :: String -> Maybe (String,PortNumber)
+    parseInetAddr str = case break (==':') str of
+        (':':portStr, "")     -> Just ("0.0.0.0", fromIntegral $ read portStr)
+        (hostStr,':':portStr) -> Just (hostStr  , fromIntegral $ read portStr)
+        _ -> Nothing
+
+    parseAddr :: String -> IO (Maybe SockAddr)
+    parseAddr v
+        | Just path <- stripPrefix "unix:" v = return $ Just (SockAddrUnix path)
+        | Just (host,port) <- parseInetAddr v =
+            inet_addr host >>= \x-> return $ Just (SockAddrInet port x)
+        | otherwise = return Nothing
+
+    listenOn :: IO (Maybe AddrInfo)
+    listenOn =
+      fmap addrInfo $ getEnvironment >>= (parseAddr . fromMaybe "unix:./ipam.sock" . lookup "LISTEN")
         where
-          addrInfo af addr =
-            AddrInfo { addrFamily = af, addrAddress = addr,
-            addrSocketType =Stream, addrFlags = [],
-            addrProtocol = 0, addrCanonName = Nothing }
+          addrInfo addr
+            | Just a@(SockAddrInet _ _) <- addr = Just defaultHints{addrFamily = AF_INET, addrAddress = a}
+            | Just a@(SockAddrUnix _)   <- addr = Just defaultHints{addrFamily = AF_UNIX, addrAddress = a}
+            | otherwise = Nothing
 
     createSocket = do
-      addr <- listenOn
-      print addr
+      (Just addr) <- listenOn
+      print $ addrAddress addr
       sock <- socket (addrFamily addr) Stream 0
       bind sock (addrAddress addr)
       return (addr,sock)
 
     destroySocket (addr,sock) = do
-      address <- listenOn
       close sock
-      case addrAddress address of
+      case addrAddress addr of
         SockAddrUnix path -> removeFile path
         _ -> return ()
 
     routing = do
       middleware logStdoutDev
-      get "/" $ text "Hello, world!"
+      get  "/" (text "Hello, world!")
+      post "/" (text "ok")

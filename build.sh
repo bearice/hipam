@@ -1,4 +1,5 @@
 #!/bin/bash
 set -e
 cabal build
-./dist/build/hipam/hipam
+exec ./dist/build/hipam/hipam
+

@@ -52,6 +52,7 @@ executable hipam
   -- Other library packages from which modules are imported.
   build-depends:    base
                   , network
+                  , iproute
                   , directory
                   , data-default-class
                   , wai
