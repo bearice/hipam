@@ -13,6 +13,7 @@ import Data.IP (toHostAddress)
 import Data.Default.Class (def)
 import Control.Exception (bracket)
 import Control.Monad
+import API
 
 main :: IO()
 main = bracket createSocket destroySocket $ \(_,socket) -> do
@@ -21,7 +22,7 @@ main = bracket createSocket destroySocket $ \(_,socket) -> do
   where
     parseInetAddr :: String -> Maybe (String,PortNumber)
     parseInetAddr str = case break (==':') str of
-        (':':portStr, "")     -> Just ("0.0.0.0", fromIntegral $ read portStr)
+        (portStr, "")     -> Just ("0.0.0.0", fromIntegral $ read portStr)
         (hostStr,':':portStr) -> Just (hostStr  , fromIntegral $ read portStr)
         _ -> Nothing
 
@@ -41,20 +42,19 @@ main = bracket createSocket destroySocket $ \(_,socket) -> do
             | Just a@(SockAddrUnix _)   <- addr = Just defaultHints{addrFamily = AF_UNIX, addrAddress = a}
             | otherwise = Nothing
 
+    createSocket :: IO (AddrInfo,Socket)
     createSocket = do
-      (Just addr) <- listenOn
+      addr <- listenOn >>= \x -> case x of
+        (Just a) -> return a
+        otherwise -> error "Oops"
       print $ addrAddress addr
       sock <- socket (addrFamily addr) Stream 0
       bind sock (addrAddress addr)
       return (addr,sock)
 
+    destroySocket :: (AddrInfo,Socket) -> IO ()
     destroySocket (addr,sock) = do
       close sock
       case addrAddress addr of
         SockAddrUnix path -> removeFile path
         _ -> return ()
-
-    routing = do
-      middleware logStdoutDev
-      get  "/" (text "Hello, world!")
-      post "/" (text "ok")

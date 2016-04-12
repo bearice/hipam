@@ -43,11 +43,12 @@ cabal-version:       >=1.8
 
 
 executable hipam
+  hs-source-dirs:    src
   -- .hs or .lhs file containing the Main module.
-  main-is:           src/main.hs
+  main-is:           main.hs
 
   -- Modules included in this executable, other than Main.
-  -- other-modules:
+  other-modules:     API
 
   -- Other library packages from which modules are imported.
   build-depends:    base
@@ -67,8 +68,10 @@ executable hipam
                   , persistent-template
                   , persistent-sqlite
                   , monad-logger
-                  , heroku
                   , transformers
                   , wai-middleware-static
                   , wai-extra
                   , time
+                  , aeson
+                  , unordered-containers
+                  , vector
