@@ -75,3 +75,6 @@ executable hipam
                   , aeson
                   , unordered-containers
                   , vector
+                  , stm
+                  , mtl
+                  , text-format

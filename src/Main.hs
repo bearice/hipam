@@ -4,7 +4,7 @@
 module Main where
 import System.Directory (removeFile)
 import System.Environment
-import Web.Scotty
+import Web.Scotty.Trans
 import Network.Wai.Middleware.RequestLogger
 import Network.Socket
 import Data.Maybe
@@ -17,8 +17,9 @@ import API
 
 main :: IO()
 main = bracket createSocket destroySocket $ \(_,socket) -> do
+    state <- mkState
     listen socket 10
-    scottySocket def socket routing
+    scottySocketT def socket (withState state) routing
   where
     parseInetAddr :: String -> Maybe (String,PortNumber)
     parseInetAddr str = case break (==':') str of
