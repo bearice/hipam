@@ -14,6 +14,7 @@ import Data.Default.Class (def)
 import Control.Exception (bracket)
 import Control.Monad
 import API
+import State
 
 main :: IO()
 main = bracket createSocket destroySocket $ \(_,socket) -> do

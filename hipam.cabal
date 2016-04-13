@@ -48,7 +48,7 @@ executable hipam
   main-is:           Main.hs
 
   -- Modules included in this executable, other than Main.
-  other-modules:     API
+  other-modules:     API,NetworkDriver,IpamDriver,State,Util
 
   -- Other library packages from which modules are imported.
   build-depends:    base
