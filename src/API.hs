@@ -8,6 +8,7 @@ import Data.Maybe
 import Data.List
 import Web.Scotty
 import Network.Wai.Middleware.RequestLogger
+import Data.Text
 import Data.Aeson hiding (json)
 import Data.Aeson.Types (emptyObject)
 import Data.Vector as V
@@ -60,7 +61,8 @@ routing = do
 
   notFound $ mkError "not found"
 
+mkJson :: [(Text, Value)] -> ActionM ()
 mkJson = json . Object . M.fromList
-mkError err = mkJson [
-    ("Err",err)
-  ]
+
+mkError :: Value -> ActionM ()
+mkError err = mkJson [("Err",err)]
