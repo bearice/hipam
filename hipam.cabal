@@ -73,6 +73,7 @@ executable hipam
                   , wai-extra
                   , time
                   , aeson
+                  , containers
                   , unordered-containers
                   , vector
                   , stm
