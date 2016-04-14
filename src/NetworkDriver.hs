@@ -41,8 +41,10 @@ handler = do
   post "/NetworkDriver.GetCapabilities" $ mkJson [("Scope","local")]
   post "/NetworkDriver.CreateNetwork" mkEmptyObj
   post "/NetworkDriver.DeleteNetwork" mkEmptyObj
-  post "/NetworkDriver.CreateEndpoint" $
-    fmap interface jsonData >>= Web.json . fmap traceShowId
+  post "/NetworkDriver.CreateEndpoint" $ do
+    i <- fmap interface jsonData
+    traceShowM i
+    Web.json i
   post "/NetworkDriver.DeleteEndpoint" mkEmptyObj
   post "/NetworkDriver.EndpointOperInfo" $ mkJson [("Value",emptyObject)]
   post "/NetworkDriver.Join" $ mkError "not impemenentd"
