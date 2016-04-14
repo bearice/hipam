@@ -19,7 +19,7 @@ import Debug.Trace
 data CreateEndpointRequest = CERequest {
       networkID  :: T.Text
     , endpointID :: T.Text
-    , options    :: Map T.Text T.Text
+    , options    :: Map T.Text Value
     , interface  :: Map T.Text T.Text
   } deriving (Generic, Show)
 
